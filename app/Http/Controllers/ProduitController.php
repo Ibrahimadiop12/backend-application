@@ -18,82 +18,86 @@ class ProduitController extends Controller
  
      // Crée un nouveau produit
      public function store(Request $request)
-     {
-         $request->validate([
-             'libelle' => 'required|string|max:255',
-             'categorie_id' => 'required|exists:categories,id',
-             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-         ]);
- 
-         $imagePath = null;
-         if ($request->hasFile('image')) {
-             $image = $request->file('image');
-             $imageName = Str::random(10) . '.' . $image->getClientOriginalExtension();
-             $imagePath = $image->storeAs('public/images', $imageName);
-         }
- 
-         $produit = Produit::create([
-             'libelle' => $request->libelle,
-             'image' => $imagePath ? basename($imagePath) : null,
-             'categorie_id' => $request->categorie_id,
-         ]);
- 
-         return response()->json([
-             'message' => 'Produit créé avec succès!',
-             'produit' => $produit
-         ], 201);
-     }
- 
-     // Affiche un produit spécifique
-     public function show($id)
-     {
-         $produit = Produit::with('categorie')->find($id);
- 
-         if (!$produit) {
-             return response()->json(['message' => 'Produit non trouvé'], 404);
-         }
- 
-         return response()->json($produit, 200);
-     }
+{
+    // Validation des données
+    $request->validate([
+        'libelle' => 'required|string|max:255',
+        'categorie_id' => 'required|exists:categories,id',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'statut' => 'sometimes|in:publie,archive', // Le statut est optionnel, avec des valeurs prédéfinies
+    ]);
+
+    // Gestion de l'image si elle est présente
+    $imagePath = null;
+    if ($request->hasFile('image')) {
+        $image = $request->file('image');
+        $imageName = Str::random(10) . '.' . $image->getClientOriginalExtension();
+        $imagePath = $image->storeAs('public/images', $imageName);
+    }
+
+    // Création du produit avec le statut par défaut "publie" s'il n'est pas fourni
+    $produit = Produit::create([
+        'libelle' => $request->libelle,
+        'image' => $imagePath ? basename($imagePath) : null,
+        'categorie_id' => $request->categorie_id,
+        'statut' => $request->input('statut', 'publie'), // Valeur par défaut "publie"
+    ]);
+
+    return response()->json([
+        'message' => 'Produit créé avec succès!',
+        'produit' => $produit
+    ], 201);
+}
+
+
  
      // Met à jour un produit spécifique
      public function update(Request $request, $id)
      {
+         // Validation des données
          $request->validate([
              'libelle' => 'required|string|max:255',
              'categorie_id' => 'required|exists:categories,id',
              'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+             'statut' => 'sometimes|in:publie,archive', // Validation pour le statut, avec valeurs prédéfinies
          ]);
- 
+     
+         // Recherche du produit
          $produit = Produit::find($id);
- 
+     
+         // Vérification si le produit existe
          if (!$produit) {
              return response()->json(['message' => 'Produit non trouvé'], 404);
          }
- 
+     
+         // Gestion de l'image si une nouvelle est envoyée
          $imagePath = $produit->image;
          if ($request->hasFile('image')) {
-             // Supprimer l'ancienne image si elle existe
+             // Suppression de l'ancienne image si elle existe
              if ($imagePath && Storage::exists('public/images/' . $imagePath)) {
                  Storage::delete('public/images/' . $imagePath);
              }
- 
+     
+             // Stockage de la nouvelle image
              $image = $request->file('image');
              $imageName = Str::random(10) . '.' . $image->getClientOriginalExtension();
              $imagePath = $image->storeAs('public/images', $imageName);
          }
- 
+     
+         // Mise à jour du produit
          $produit->update([
              'libelle' => $request->libelle,
              'image' => $imagePath ? basename($imagePath) : $produit->image,
              'categorie_id' => $request->categorie_id,
+             'statut' => $request->input('statut', $produit->statut), // Mise à jour du statut ou conservation de l'ancien
          ]);
- 
+     
          return response()->json([
              'message' => 'Produit mis à jour avec succès!',
              'produit' => $produit
          ], 200);
      }
+     
  
      // Supprime un produit spécifique
      public function destroy($id)

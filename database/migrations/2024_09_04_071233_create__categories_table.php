@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('nomCategorie');
+            $table->string('image')->nullable();
+            $table->enum('statut', ['publie', 'archive'])->default('publie');
             $table->timestamps();
         });
     }

@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('produits', function (Blueprint $table) {
             $table->id();
-            $table->string('libelle');
+            $table->string('nom',60);
+            $table->string('libelle',60);
             $table->string('image')->nullable();
-            $table->enum('statut', ['publie', 'archive'])->default('publie');
+            $table->enum('statut', ['publier', 'archiver'])->default('publier');
             $table->foreignId('categorie_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
@@ -27,6 +28,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('produits');
-        
+
     }
 };

@@ -15,12 +15,13 @@ class ProduitController extends Controller
          $produits = Produit::with('categorie')->get();
          return response()->json($produits, 200);
      }
- 
+
      // Crée un nouveau produit
      public function store(Request $request)
 {
     // Validation des données
     $request->validate([
+        'nom' => 'required|string|max:255',
         'libelle' => 'required|string|max:255',
         'categorie_id' => 'required|exists:categories,id',
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -37,10 +38,11 @@ class ProduitController extends Controller
 
     // Création du produit avec le statut par défaut "publie" s'il n'est pas fourni
     $produit = Produit::create([
+        'nom' => $request->nom,
         'libelle' => $request->libelle,
         'image' => $imagePath ? basename($imagePath) : null,
         'categorie_id' => $request->categorie_id,
-        'statut' => $request->input('statut', 'publie'), // Valeur par défaut "publie"
+        'statut' => $request->input('statut', 'publier'), // Valeur par défaut "publie"
     ]);
 
     return response()->json([
@@ -50,26 +52,27 @@ class ProduitController extends Controller
 }
 
 
- 
+
      // Met à jour un produit spécifique
      public function update(Request $request, $id)
      {
          // Validation des données
          $request->validate([
+             'nom' => 'required|string|max:255',
              'libelle' => 'required|string|max:255',
              'categorie_id' => 'required|exists:categories,id',
              'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
              'statut' => 'sometimes|in:publie,archive', // Validation pour le statut, avec valeurs prédéfinies
          ]);
-     
+
          // Recherche du produit
          $produit = Produit::find($id);
-     
+
          // Vérification si le produit existe
          if (!$produit) {
              return response()->json(['message' => 'Produit non trouvé'], 404);
          }
-     
+
          // Gestion de l'image si une nouvelle est envoyée
          $imagePath = $produit->image;
          if ($request->hasFile('image')) {
@@ -77,56 +80,57 @@ class ProduitController extends Controller
              if ($imagePath && Storage::exists('public/images/' . $imagePath)) {
                  Storage::delete('public/images/' . $imagePath);
              }
-     
+
              // Stockage de la nouvelle image
              $image = $request->file('image');
              $imageName = Str::random(10) . '.' . $image->getClientOriginalExtension();
              $imagePath = $image->storeAs('public/images', $imageName);
          }
-     
+
          // Mise à jour du produit
          $produit->update([
+             'nom' => $request->nom,
              'libelle' => $request->libelle,
              'image' => $imagePath ? basename($imagePath) : $produit->image,
              'categorie_id' => $request->categorie_id,
              'statut' => $request->input('statut', $produit->statut), // Mise à jour du statut ou conservation de l'ancien
          ]);
-     
+
          return response()->json([
              'message' => 'Produit mis à jour avec succès!',
              'produit' => $produit
          ], 200);
      }
-     
- 
+
+
      // Supprime un produit spécifique
      public function destroy($id)
      {
          $produit = Produit::find($id);
- 
+
          if (!$produit) {
              return response()->json(['message' => 'Produit non trouvé'], 404);
          }
- 
+
          // Supprimer l'image associée si elle existe
          if ($produit->image && Storage::exists('public/images/' . $produit->image)) {
              Storage::delete('public/images/' . $produit->image);
          }
- 
+
          $produit->delete();
- 
+
          return response()->json(['message' => 'Produit supprimé avec succès'], 200);
      }
- 
+
      // Récupère l'URL de l'image
      public function image($filename)
      {
          $path = storage_path('app/public/images/' . $filename);
- 
+
          if (!file_exists($path)) {
              abort(404);
          }
- 
+
          return response()->file($path);
      }
 }

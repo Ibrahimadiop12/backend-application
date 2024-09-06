@@ -11,9 +11,9 @@ class Declaration extends Model
     protected $fillable = [
         'description',
         'tracabilite',
-        'stock',
+        'quantite',
         'prix',
-        'date_primature',
+        'date_peremption',
         'statut',
         'produit_id',
         'vendeur_id'

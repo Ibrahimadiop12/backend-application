@@ -14,9 +14,9 @@ class DeclarationController extends Controller
        $request->validate([
            'description' => 'required|string',
            'tracabilite' => 'required|string',
-           'stock' => 'required|integer',
+           'quantite' => 'required|integer',
            'prix' => 'required|numeric',
-           'date_primature' => 'required|date',
+           'date_peremption' => 'required|date',
            'produit_id' => 'required|exists:produits,id',
            'vendeur_id' => 'required|exists:users,id',
            'statut' => 'required|string',
@@ -26,12 +26,12 @@ class DeclarationController extends Controller
        $declaration = Declaration::where([
            ['produit_id', '=', $request->produit_id],
            ['vendeur_id', '=', $request->vendeur_id],
-           ['date_primature', '=', $request->date_primature],
+           ['date_peremption', '=', $request->date_peremption],
        ])->first();
 
        if ($declaration) {
            // Si la déclaration existe déjà, mettre à jour le stock
-           $declaration->stock += $request->stock;
+           $declaration->quantite += $request->quantite;
            $declaration->prix = $request->prix; // mettre à jour le prix au besoin
            $declaration->statut = $request->statut;
            $declaration->save();
@@ -40,9 +40,9 @@ class DeclarationController extends Controller
            $declaration = Declaration::create([
                'description' => $request->description,
                'tracabilite' => $request->tracabilite,
-               'stock' => $request->stock,
+               'quantite' => $request->quantite,
                'prix' => $request->prix,
-               'date_primature' => $request->date_primature,
+               'date_peremption' => $request->date_peremption,
                'produit_id' => $request->produit_id,
                'vendeur_id' => $request->vendeur_id,
                'statut' => $request->statut,
@@ -62,7 +62,7 @@ class DeclarationController extends Controller
 
        return response()->json([
            'produit' => $produit,
-           'stock_total' => $produit->declarations->sum('stock'),
+           'quantite_total' => $produit->declarations->sum('quantite'),
            'declarations' => $produit->declarations
        ], 200);
    }

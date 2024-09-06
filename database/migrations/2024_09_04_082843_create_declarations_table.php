@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('declarations', function (Blueprint $table) {
             $table->id();
-            $table->text('description');
-            $table->string('tracabilite');
-            $table->integer('stock');
+            $table->text('description',200);
+            $table->string('tracabilite',50);
+            $table->integer('quantite');
             $table->decimal('prix', 8, 2)->after('stock');
-            $table->date('date_primature');
-            $table->enum('statut', ['publie', 'en attente','annule'])->default('en attente');
+            $table->date('date_peremption');
+            $table->enum('statut', ['publier', 'en attente','annuler'])->default('en attente');
             $table->foreignId('produit_id')->constrained();
             $table->foreignId('vendeur_id')->constrained('users');
             $table->timestamps();

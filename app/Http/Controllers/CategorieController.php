@@ -25,7 +25,7 @@ class CategorieController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Image est nullable
             'statut' => 'sometimes|string|in:publie,archive', // Permet de définir le statut ou prendre la valeur par défaut
         ]);
-    
+
         // Traitement de l'upload de l'image
         $imagePath = null;
         if ($request->hasFile('image')) {
@@ -34,24 +34,24 @@ class CategorieController extends Controller
             $path = $image->storeAs('public/images/categories', $filename);
             $imagePath = '/storage/images/categories/' . $filename;
         }
-    
+
         // Définir le statut par défaut à "publie" si non fourni
         $statut = $request->input('statut', 'publie');
-    
+
         // Créer la catégorie avec les données validées
         $categorie = Categorie::create([
             'nomCategorie' => $validatedData['nomCategorie'],
             'image' => $imagePath, // Peut être null si aucune image n'est fournie
             'statut' => $statut,
         ]);
-    
+
         return response()->json([
             'message' => 'Catégorie créée avec succès!',
             'categorie' => $categorie
         ], 201);
     }
-    
-    
+
+
 
 
     // Affiche une catégorie spécifique
@@ -75,15 +75,15 @@ class CategorieController extends Controller
             'statut' => 'sometimes|in:publie,archive', // Validation pour le statut
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validation de l'image
         ]);
-    
+
         // Recherche de la catégorie
         $categorie = Categorie::find($id);
-    
+
         // Vérification si la catégorie existe
         if (!$categorie) {
             return response()->json(['message' => 'Catégorie non trouvée'], 404);
         }
-    
+
         // Gestion de l'image
         $imagePath = $categorie->image;
         if ($request->hasFile('image')) {
@@ -91,26 +91,26 @@ class CategorieController extends Controller
             if ($imagePath && Storage::exists('public/images/' . $imagePath)) {
                 Storage::delete('public/images/' . $imagePath);
             }
-    
+
             // Sauvegarde de la nouvelle image
             $image = $request->file('image');
             $imageName = Str::random(10) . '.' . $image->getClientOriginalExtension();
             $imagePath = $image->storeAs('public/images', $imageName);
         }
-    
+
         // Mise à jour de la catégorie
         $categorie->update([
             'nomCategorie' => $request->nomCategorie,
             'statut' => $request->input('statut', $categorie->statut), // Mise à jour du statut ou conservation de l'ancien
             'image' => $imagePath ? basename($imagePath) : $categorie->image, // Mise à jour de l'image ou conservation de l'ancienne
         ]);
-    
+
         return response()->json([
             'message' => 'Catégorie mise à jour avec succès!',
             'categorie' => $categorie
         ], 200);
     }
-    
+
 
     // Supprime une catégorie spécifique
     public function destroy($id)

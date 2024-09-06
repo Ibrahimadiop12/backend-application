@@ -72,7 +72,7 @@ class CategorieController extends Controller
         // Validation des données
         $request->validate([
             'nomCategorie' => 'required|string|max:255',
-            'statut' => 'sometimes|in:publie,archive', // Validation pour le statut
+            'statut' => 'sometimes|in:publier,archiver', // Validation pour le statut
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validation de l'image
         ]);
 

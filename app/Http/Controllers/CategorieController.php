@@ -128,4 +128,38 @@ class CategorieController extends Controller
 
         return response()->json(['message' => 'Catégorie supprimée avec succès'], 200);
     }
+    public function archiver($id)
+    {
+        $categorie = Categorie::find($id);
+
+        if (!$categorie) {
+            return response()->json(['message' => 'Categorie non trouvé'], 404);
+        }
+
+        $categorie->statut = 'archive';
+        $categorie->save();
+
+        return response()->json([
+            'message' => 'Categorie archivé avec succès!',
+            'produit' => $categorie
+        ], 200);
+    }
+
+     // Publie un produit spécifique
+     public function publier($id)
+     {
+         $categorie = Categorie::find($id);
+ 
+         if (!$categorie) {
+             return response()->json(['message' => 'Categorie non trouvé'], 404);
+         }
+ 
+         $categorie->statut = 'publie';
+         $categorie->save();
+ 
+         return response()->json([
+             'message' => 'Categorie publié avec succès!',
+             'produit' => $categorie
+         ], 200);
+     }
 }

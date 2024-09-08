@@ -53,7 +53,10 @@ Route::middleware('auth:api')
             Route::get('/categories/{id}', [CategorieController::class, 'show']); // Affiche une catégorie spécifique
             Route::put('/categories/{id}', [CategorieController::class, 'update']); // Met à jour une catégorie spécifique
             Route::delete('/categories/{id}', [CategorieController::class, 'destroy']); // Supprime une catégorie spécifique
-            //route pour produits 
+             // Routes pour archiver et publier des categories
+             Route::put('/categories/{id}/archiver', [CategorieController::class, 'archiver']);
+             Route::put('/categories/{id}/publier', [CategorieController::class, 'publier']);
+           //route pour produits 
             Route::get('/produits', [ProduitController::class, 'index']); // Liste tous les produits
             Route::post('/produits', [ProduitController::class, 'store']); // Crée un nouveau produit
             Route::get('/produits/{id}', [ProduitController::class, 'show']); // Affiche un produit spécifique

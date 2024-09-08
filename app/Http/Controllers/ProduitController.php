@@ -23,10 +23,10 @@ class ProduitController extends Controller
           $produits = Produit::with('categorie')
                       ->where('statut', 'publier')
                       ->get();
-      
+
           return response()->json($produits, 200);
       }
-      
+
      // Crée un nouveau produit
      public function store(Request $request)
 {
@@ -168,19 +168,19 @@ class ProduitController extends Controller
      public function publier($id)
      {
          $produit = Produit::find($id);
- 
+
          if (!$produit) {
              return response()->json(['message' => 'Produit non trouvé'], 404);
          }
- 
+
          $produit->statut = 'publier';
          $produit->save();
- 
+
          return response()->json([
              'message' => 'Produit publié avec succès!',
              'produit' => $produit
          ], 200);
      }
- 
+
 
 }

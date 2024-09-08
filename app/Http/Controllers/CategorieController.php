@@ -23,7 +23,7 @@ class CategorieController extends Controller
         $validatedData = $request->validate([
             'nomCategorie' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Image est nullable
-            'statut' => 'sometimes|string|in:publier,archiver', // Permet de définir le statut ou prendre la valeur par défaut
+            'statut' => 'sometimes|string|in:publie,archive', // Permet de définir le statut ou prendre la valeur par défaut
         ]);
 
         // Traitement de l'upload de l'image
@@ -36,7 +36,7 @@ class CategorieController extends Controller
         }
 
         // Définir le statut par défaut à "publie" si non fourni
-        $statut = $request->input('statut', 'publier');
+        $statut = $request->input('statut', 'publie');
 
         // Créer la catégorie avec les données validées
         $categorie = Categorie::create([
@@ -72,7 +72,7 @@ class CategorieController extends Controller
         // Validation des données
         $request->validate([
             'nomCategorie' => 'required|string|max:255',
-            'statut' => 'sometimes|in:publier,archiver', // Validation pour le statut
+            'statut' => 'sometimes|in:publie,archive', // Validation pour le statut
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validation de l'image
         ]);
 

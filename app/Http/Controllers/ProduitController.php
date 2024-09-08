@@ -15,7 +15,18 @@ class ProduitController extends Controller
          $produits = Produit::with('categorie')->get();
          return response()->json($produits, 200);
      }
+      ///produits vendeur
 
+      public function indexV()
+      {
+          // Récupérer uniquement les produits dont le statut est 'publié'
+          $produits = Produit::with('categorie')
+                      ->where('statut', 'publier')
+                      ->get();
+      
+          return response()->json($produits, 200);
+      }
+      
      // Crée un nouveau produit
      public function store(Request $request)
 {
@@ -25,22 +36,23 @@ class ProduitController extends Controller
         'libelle' => 'required|string|max:255',
         'categorie_id' => 'required|exists:categories,id',
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'statut' => 'sometimes|in:publie,archive', // Le statut est optionnel, avec des valeurs prédéfinies
+        'statut' => 'sometimes|in:publier,archiver', // Le statutest optionnel, avec des valeurs prédéfinies
     ]);
 
     // Gestion de l'image si elle est présente
-    $imagePath = null;
-    if ($request->hasFile('image')) {
-        $image = $request->file('image');
-        $imageName = Str::random(10) . '.' . $image->getClientOriginalExtension();
-        $imagePath = $image->storeAs('public/images', $imageName);
-    }
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $filename = time() . '_' . $image->getClientOriginalName();
+            $path = $image->storeAs('public/images/produits', $filename);
+            $imagePath = '/storage/images/produits/' . $filename;
+        }
 
     // Création du produit avec le statut par défaut "publie" s'il n'est pas fourni
     $produit = Produit::create([
         'nom' => $request->nom,
         'libelle' => $request->libelle,
-        'image' => $imagePath ? basename($imagePath) : null,
+        'image' => $imagePath,
         'categorie_id' => $request->categorie_id,
         'statut' => $request->input('statut', 'publier'), // Valeur par défaut "publie"
     ]);
@@ -62,7 +74,7 @@ class ProduitController extends Controller
              'libelle' => 'required|string|max:255',
              'categorie_id' => 'required|exists:categories,id',
              'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-             'statut' => 'sometimes|in:publie,archive', // Validation pour le statut, avec valeurs prédéfinies
+             'statut' => 'sometimes|in:publier,archiver', // Validation pour le statut, avec valeurs prédéfinies
          ]);
 
          // Recherche du produit
@@ -133,4 +145,42 @@ class ProduitController extends Controller
 
          return response()->file($path);
      }
+
+     // Archive un produit spécifique
+    public function archiver($id)
+    {
+        $produit = Produit::find($id);
+
+        if (!$produit) {
+            return response()->json(['message' => 'Produit non trouvé'], 404);
+        }
+
+        $produit->statut = 'archiver';
+        $produit->save();
+
+        return response()->json([
+            'message' => 'Produit archivé avec succès!',
+            'produit' => $produit
+        ], 200);
+    }
+
+     // Publie un produit spécifique
+     public function publier($id)
+     {
+         $produit = Produit::find($id);
+ 
+         if (!$produit) {
+             return response()->json(['message' => 'Produit non trouvé'], 404);
+         }
+ 
+         $produit->statut = 'publier';
+         $produit->save();
+ 
+         return response()->json([
+             'message' => 'Produit publié avec succès!',
+             'produit' => $produit
+         ], 200);
+     }
+ 
+
 }

@@ -87,31 +87,177 @@ class AuthController extends Controller
         ], 500);
     }
 }
+public function update(Request $request, $id)
+{
+    // Trouver l'utilisateur par ID
+    $user = User::find($id);
 
-    public function login(Request $request)
-    {
-        $data =  $request->validate([
-            "email" => "required|email|",
-            "password" => "required"
-        ]);
-
-        $token = JWTAuth::attempt($data);
-
-        if(!empty($token))
-        {
-            return response()->json([
-                'statut' => 200,
-                'data'=> auth()->user(),
-                "token" =>  $token
-            ]);
-
-        }else{
-            return response()->json([
-                "statut" => false,
-                "token" =>  null
-            ]);
-        }
+    if (!$user) {
+        return response()->json([
+            'statut' => false,
+            'message' => 'Utilisateur non trouvé'
+        ], 404);
     }
+
+    // Valider les nouvelles données du formulaire
+    $data = $request->validate([
+        "name" => "required",
+        "email" => "required|email|unique:users,email," . $id, // Ignorer l'email de l'utilisateur actuel dans la validation unique
+        "password" => "nullable|confirmed", // Le mot de passe peut être optionnel
+        'role' => 'required|in:admin,vendeur,client',
+        "adresse" => "required",
+        "photo" => "nullable|image|mimes:jpeg,png,jpg,gif|max:2048", // L'image est optionnelle
+        "telephone" => "required",
+    ]);
+
+    try {
+        // Traitement de l'upload de l'image si une nouvelle image est fournie
+        if ($request->hasFile('photo')) {
+            $filename = time() . '_' . $request->file('photo')->getClientOriginalName();
+            $path = $request->file('photo')->storeAs('images', $filename, 'public');
+            $data['photo'] = '/storage/' . $path; // Chemin stocké dans la base de données
+
+            // Supprimer l'ancienne photo si elle existe
+            if ($user->photo) {
+                $oldImagePath = public_path($user->photo);
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath); // Supprime l'ancienne image
+                }
+            }
+        }
+
+        // Hash du mot de passe si un nouveau mot de passe est fourni
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']); // Ne pas écraser l'ancien mot de passe s'il n'est pas modifié
+        }
+
+        // Mettre à jour les informations de l'utilisateur
+        $user->update($data);
+
+        // Réponse avec les nouvelles données de l'utilisateur
+        return response()->json([
+            'statut' => 200,
+            'data' => $user,
+            'message' => 'Profil mis à jour avec succès'
+        ], 200);
+
+    } catch (\Exception $e) {
+        // En cas d'erreur, retourne un message d'erreur
+        return response()->json([
+            "statut" => false,
+            "message" => "Erreur lors de la mise à jour",
+            "error" => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function login(Request $request)
+{
+    // Validation des données de connexion
+    $data =  $request->validate([
+        "email" => "required|email",
+        "password" => "required"
+    ]);
+
+    // Vérifier si l'utilisateur existe avec l'email fourni
+    $user = User::where('email', $data['email'])->first();
+
+    // Vérifier si l'utilisateur est bloqué avant de tenter la connexion
+    if ($user && $user->statut == 'bloquer') {
+        return response()->json([
+            'statut' => false,
+            'message' => 'Votre compte est bloqué. Veuillez contacter l\'administrateur.',
+        ], 403); // 403 = Forbidden
+    }
+
+    // Tentative de connexion avec les données fournies
+    $token = JWTAuth::attempt($data);
+
+    // Vérifier si les informations d'identification sont valides
+    if ($token) {
+        return response()->json([
+            'statut' => 200,
+            'data' => auth()->user(),
+            "token" =>  $token
+        ]);
+    } else {
+        return response()->json([
+            "statut" => false,
+            "message" => "Identifiants invalides.",
+            "token" =>  null
+        ], 401); // 401 = Unauthorized
+    }
+}
+///fonction qui permet de bloquer un utilisateur
+
+public function bloquerUtilisateur($id)
+{
+    try {
+        // Trouver l'utilisateur par son ID
+        $user = User::findOrFail($id);
+
+        // Vérifier si l'utilisateur est déjà bloqué
+        if ($user->statut == 'bloquer') {
+            return response()->json([
+                'statut' => false,
+                'message' => 'L\'utilisateur est déjà bloqué.'
+            ], 400); // 400 = Bad Request
+        }
+
+        // Mettre à jour le statut de l'utilisateur à "bloquer"
+        $user->statut = 'bloquer';
+        $user->save();
+
+        return response()->json([
+            'statut' => true,
+            'message' => 'L\'utilisateur a été bloqué avec succès.'
+        ], 200);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'statut' => false,
+            'message' => 'Erreur lors du blocage de l\'utilisateur.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+   ///Fonction qui permet de debloquer un utilisateur
+
+
+   public function debloquerUtilisateur($id)
+{
+    try {
+        // Trouver l'utilisateur par son ID
+        $user = User::findOrFail($id);
+
+        // Vérifier si l'utilisateur est déjà débloqué
+        if ($user->statut == 'debloquer') {
+            return response()->json([
+                'statut' => false,
+                'message' => 'L\'utilisateur est déjà débloqué.'
+            ], 400);
+        }
+
+        // Mettre à jour le statut de l'utilisateur à "debloquer"
+        $user->statut = 'debloquer';
+        $user->save();
+
+        return response()->json([
+            'statut' => true,
+            'message' => 'L\'utilisateur a été débloqué avec succès.'
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'statut' => false,
+            'message' => 'Erreur lors du déblocage de l\'utilisateur.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
 
 
 

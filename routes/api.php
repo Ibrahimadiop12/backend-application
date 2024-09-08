@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProduitController;
@@ -40,6 +41,11 @@ Route::middleware('auth:api')
         Route::middleware('role:admin')->group(function () {
             Route::get('/categories', [CategorieController::class, 'index']);  // Liste toutes les catégories
             // Routes spécifiques aux administrateurs
+            ///route qui permet de bloquer et de debloquer un utilisateur
+
+            Route::put('/utilisateurs/{id}/bloquer', [AuthController::class, 'bloquerUtilisateur']);
+            Route::put('/utilisateurs/{id}/debloquer', [AuthController::class, 'debloquerUtilisateur']);
+
             //Api pour les categories
           ///route pour les catégories
             Route::post('/categories', [CategorieController::class, 'store']); // Crée une nouvelle catégorie
@@ -53,10 +59,17 @@ Route::middleware('auth:api')
             Route::get('/produits/{id}', [ProduitController::class, 'show']); // Affiche un produit spécifique
             Route::put('/produits/{id}', [ProduitController::class, 'update']); // Met à jour un produit spécifique
             Route::delete('/produits/{id}', [ProduitController::class, 'destroy']); // Supprime un produit spécifique
-    });
+            // Routes pour archiver et publier des produits
+            Route::put('/produits/{id}/archiver', [ProduitController::class, 'archiver']);
+            Route::put('/produits/{id}/publier', [ProduitController::class, 'publier']);
+        });
 
         Route::middleware('role:vendeur')->group(function () {
             // Routes spécifiques aux vendeurs
+            //Api produit
+           Route::get('/litProduits', [ProduitController::class, 'indexV']); // Liste tous les produits
+            ///route qui permet de modifier c'est informations
+                Route::put('/modifier/{id}', [AuthController::class, 'update']);
             ///route pour la déclaration 
                 Route::post('/declarations', [DeclarationController::class, 'store']);
                 Route::get('/produits/{id}', [DeclarationController::class, 'show']);

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nomCategorie',50);
             $table->string('image')->nullable();
-            $table->enum('statut', ['publier', 'archiver'])->default('publier');
+            $table->enum('statut', ['publie', 'archive'])->default('publie');
             $table->timestamps();
         });
     }

@@ -31,20 +31,25 @@ Route::middleware('auth:api')
 
     Route::post('/password/email', [ForgotPasswordController::class, 'sendResetLinkEmail']);
     Route::post('/password/reset', [ResetPasswordController::class, 'reset']);
-///route pour la déclaration 
+
+///route pour la déclaration
     Route::post('/declarations', [DeclarationController::class, 'store']);
     Route::get('/produits/{id}', [DeclarationController::class, 'show']);
     Route::get('/vendeurs/{vendeur_id}/declarations', [DeclarationController::class, 'showByVendeur']);
 
-    
+
     Route::middleware('auth:api')->group(function () {
         Route::middleware('role:admin')->group(function () {
             Route::get('/categories', [CategorieController::class, 'index']);  // Liste toutes les catégories
             // Routes spécifiques aux administrateurs
             ///route qui permet de bloquer et de debloquer un utilisateur
+            Route::get('/users', [AuthController::class, 'getUsers']);
+            Route::patch('/user/{id}/status', [AuthController::class, 'updateStatus']);
+            Route::patch('/userAdmin/{id}', [AuthController::class, 'update']);
 
             Route::put('/utilisateurs/{id}/bloquer', [AuthController::class, 'bloquerUtilisateur']);
             Route::put('/utilisateurs/{id}/debloquer', [AuthController::class, 'debloquerUtilisateur']);
+            Route::delete('/user/{id}', [AuthController::class, 'destroy']); // Supprime une catégorie spécifique
 
             //Api pour les categories
           ///route pour les catégories
@@ -53,27 +58,39 @@ Route::middleware('auth:api')
             Route::get('/categories/{id}', [CategorieController::class, 'show']); // Affiche une catégorie spécifique
             Route::put('/categories/{id}', [CategorieController::class, 'update']); // Met à jour une catégorie spécifique
             Route::delete('/categories/{id}', [CategorieController::class, 'destroy']); // Supprime une catégorie spécifique
-            //route pour produits 
+            // Route pour mettre à jour le statut d'une catégorie
+            Route::patch('/categories/{id}/status', [CategorieController::class, 'updateStatus']);
+
+            //route pour produits
             Route::get('/produits', [ProduitController::class, 'index']); // Liste tous les produits
             Route::post('/produits', [ProduitController::class, 'store']); // Crée un nouveau produit
-            Route::get('/produits/{id}', [ProduitController::class, 'show']); // Affiche un produit spécifique
             Route::put('/produits/{id}', [ProduitController::class, 'update']); // Met à jour un produit spécifique
             Route::delete('/produits/{id}', [ProduitController::class, 'destroy']); // Supprime un produit spécifique
             // Routes pour archiver et publier des produits
             Route::put('/produits/{id}/archiver', [ProduitController::class, 'archiver']);
             Route::put('/produits/{id}/publier', [ProduitController::class, 'publier']);
+              // Route pour mettre à jour le statut d'une catégorie
+              Route::patch('/produits/{id}/status', [ProduitController::class, 'updateStatus']);
         });
 
         Route::middleware('role:vendeur')->group(function () {
             // Routes spécifiques aux vendeurs
             //Api produit
-           Route::get('/litProduits', [ProduitController::class, 'indexV']); // Liste tous les produits
+                Route::get('/litProduits', [ProduitController::class, 'indexV']); // Liste tous les produits
             ///route qui permet de modifier c'est informations
                 Route::put('/modifier/{id}', [AuthController::class, 'update']);
-            ///route pour la déclaration 
+            ///route pour la déclaration
                 Route::post('/declarations', [DeclarationController::class, 'store']);
                 Route::get('/produits/{id}', [DeclarationController::class, 'show']);
                 Route::get('/vendeurs/{vendeur_id}/declarations', [DeclarationController::class, 'showByVendeur']);
+                // routes/api.php
+                Route::put('/vendeurs/{vendeur_id}/declarations/{id}/statut', [DeclarationController::class, 'updateStatut']);
+
+            // Route pour récupérer la liste des produits
+            Route::get('/produitsid/{id}', [ProduitController::class, 'show']); // Affiche un produit spécifique
+
+
+
         });
 
         Route::middleware('role:client')->group(function () {
@@ -81,3 +98,4 @@ Route::middleware('auth:api')
         });
     });
 
+    Route::middleware('auth:api')->get('/user', [AuthController::class, 'getUserInfo']);

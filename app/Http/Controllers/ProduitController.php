@@ -23,10 +23,10 @@ class ProduitController extends Controller
           $produits = Produit::with('categorie')
                       ->where('statut', 'publier')
                       ->get();
-      
+
           return response()->json($produits, 200);
       }
-      
+
      // Crée un nouveau produit
      public function store(Request $request)
 {
@@ -63,6 +63,19 @@ class ProduitController extends Controller
     ], 201);
 }
 
+  ///Récupération d'un produit
+
+  public function show($id)
+  {
+      // Récupérer le produit par son ID
+      $produit = Produit::findOrFail($id);
+
+      // Retourner les détails du produit sous forme de JSON
+      return response()->json([
+          'message' => 'Détails du produit récupérés avec succès!',
+          'produit' => $produit
+      ], 200);
+  }
 
 
      // Met à jour un produit spécifique
@@ -168,19 +181,47 @@ class ProduitController extends Controller
      public function publier($id)
      {
          $produit = Produit::find($id);
- 
+
          if (!$produit) {
              return response()->json(['message' => 'Produit non trouvé'], 404);
          }
- 
+
          $produit->statut = 'publier';
          $produit->save();
- 
+
          return response()->json([
              'message' => 'Produit publié avec succès!',
              'produit' => $produit
          ], 200);
      }
- 
+
+
+
+     public function updateStatus(Request $request, $id)
+     {
+         // Validation des données
+         $request->validate([
+             'statut' => 'required|string|in:publier,archiver', // Validation pour le statut
+         ]);
+
+         // Recherche de la catégorie
+         $produit = Produit::find($id);
+
+         // Vérification si la catégorie existe
+         if (!$produit) {
+             return response()->json(['message' => 'produit non trouvée'], 404);
+         }
+
+         // Mise à jour du statut
+         $produit->update([
+             'statut' => $request->statut,
+         ]);
+
+         return response()->json([
+             'message' => 'Statut de la produit mis à jour avec succès!',
+             'produit' => $produit
+         ], 200);
+     }
+
 
 }

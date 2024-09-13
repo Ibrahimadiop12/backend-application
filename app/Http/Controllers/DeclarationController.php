@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 
 class DeclarationController extends Controller
 {
+
    // Fonction pour créer ou mettre à jour la déclaration d'un produit
    public function store(Request $request)
    {
@@ -19,7 +20,7 @@ class DeclarationController extends Controller
            'date_peremption' => 'required|date',
            'produit_id' => 'required|exists:produits,id',
            'vendeur_id' => 'required|exists:users,id',
-           'statut' => 'required|string',
+           'statut' => 'sometimes|in:publier,archiver',
        ]);
 
        // Trouver ou créer la déclaration
@@ -55,6 +56,7 @@ class DeclarationController extends Controller
        ], 201);
    }
 
+
    // Fonction pour afficher les déclarations d'un produit avec le stock total
    public function show($id)
    {
@@ -79,4 +81,31 @@ class DeclarationController extends Controller
            'declarations' => $declarations
        ], 200);
    }
+
+   // DeclarationController.php
+
+   public function updateStatut(Request $request, $vendeur_id, $id)
+   {
+       // Valider les données d'entrée
+       $request->validate([
+           'statut' => 'required|in:publier,archiver',
+       ]);
+
+       // Trouver la déclaration
+       $declaration = Declaration::where([
+           ['id', '=', $id],
+           ['vendeur_id', '=', $vendeur_id],
+       ])->firstOrFail();
+
+       // Mettre à jour le statut
+       $declaration->statut = $request->statut;
+       $declaration->save();
+
+       return response()->json([
+           'message' => 'Statut mis à jour avec succès!',
+           'declaration' => $declaration
+       ], 200);
+   }
+
+
 }

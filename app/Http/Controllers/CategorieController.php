@@ -6,6 +6,8 @@ use App\Models\Categorie;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+
 
 class CategorieController extends Controller
 {
@@ -23,7 +25,7 @@ class CategorieController extends Controller
         $validatedData = $request->validate([
             'nomCategorie' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Image est nullable
-            'statut' => 'sometimes|string|in:publier,archiver', // Permet de définir le statut ou prendre la valeur par défaut
+            'statut' => 'sometimes|string|in:publie,archive', // Permet de définir le statut ou prendre la valeur par défaut
         ]);
 
         // Traitement de l'upload de l'image
@@ -36,7 +38,7 @@ class CategorieController extends Controller
         }
 
         // Définir le statut par défaut à "publie" si non fourni
-        $statut = $request->input('statut', 'publier');
+        $statut = $request->input('statut', 'publie');
 
         // Créer la catégorie avec les données validées
         $categorie = Categorie::create([
@@ -69,12 +71,17 @@ class CategorieController extends Controller
     // Met à jour une catégorie spécifique
     public function update(Request $request, $id)
     {
-        // Validation des données
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'nomCategorie' => 'required|string|max:255',
-            'statut' => 'sometimes|in:publier,archiver', // Validation pour le statut
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validation de l'image
+            'statut' => 'sometimes|in:publie,archive',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         // Recherche de la catégorie
         $categorie = Categorie::find($id);
@@ -100,9 +107,9 @@ class CategorieController extends Controller
 
         // Mise à jour de la catégorie
         $categorie->update([
-            'nomCategorie' => $request->nomCategorie,
-            'statut' => $request->input('statut', $categorie->statut), // Mise à jour du statut ou conservation de l'ancien
-            'image' => $imagePath ? basename($imagePath) : $categorie->image, // Mise à jour de l'image ou conservation de l'ancienne
+            'nomCategorie' => $request->input('nomCategorie'),
+            'statut' => $request->input('statut', $categorie->statut),
+            'image' => $imagePath ? basename($imagePath) : $categorie->image,
         ]);
 
         return response()->json([
@@ -110,6 +117,7 @@ class CategorieController extends Controller
             'categorie' => $categorie
         ], 200);
     }
+
 
 
     // Supprime une catégorie spécifique
@@ -128,4 +136,32 @@ class CategorieController extends Controller
 
         return response()->json(['message' => 'Catégorie supprimée avec succès'], 200);
     }
+
+
+    public function updateStatus(Request $request, $id)
+{
+    // Validation des données
+    $request->validate([
+        'statut' => 'required|string|in:publie,archive', // Validation pour le statut
+    ]);
+
+    // Recherche de la catégorie
+    $categorie = Categorie::find($id);
+
+    // Vérification si la catégorie existe
+    if (!$categorie) {
+        return response()->json(['message' => 'Catégorie non trouvée'], 404);
+    }
+
+    // Mise à jour du statut
+    $categorie->update([
+        'statut' => $request->statut,
+    ]);
+
+    return response()->json([
+        'message' => 'Statut de la catégorie mis à jour avec succès!',
+        'categorie' => $categorie
+    ], 200);
+}
+
 }

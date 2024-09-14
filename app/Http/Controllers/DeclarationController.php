@@ -59,15 +59,17 @@ class DeclarationController extends Controller
 
    // Fonction pour afficher les déclarations d'un produit avec le stock total
    public function show($id)
-   {
-       $produit = Produit::with('declarations.vendeur')->findOrFail($id);
+{
+    // Récupérer le produit avec les déclarations, le vendeur et la catégorie associée
+    $produit = Produit::with(['declarations.vendeur', 'categorie'])->findOrFail($id);
 
-       return response()->json([
-           'produit' => $produit,
-           'quantite_total' => $produit->declarations->sum('quantite'),
-           'declarations' => $produit->declarations
-       ], 200);
-   }
+    return response()->json([
+        'produit' => $produit,
+        'quantite_total' => $produit->declarations->sum('quantite'),
+        'declarations' => $produit->declarations
+    ], 200);
+}
+
 
    // Fonction pour récupérer les déclarations d'un vendeur spécifique
    public function showByVendeur($vendeur_id)

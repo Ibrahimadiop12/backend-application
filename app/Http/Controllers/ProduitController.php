@@ -67,15 +67,10 @@ class ProduitController extends Controller
 
   public function show($id)
   {
-      // Récupérer le produit par son ID
-      $produit = Produit::findOrFail($id);
-
-      // Retourner les détails du produit sous forme de JSON
-      return response()->json([
-          'message' => 'Détails du produit récupérés avec succès!',
-          'produit' => $produit
-      ], 200);
+      $produit = Produit::with('categorie')->find($id);
+      return response()->json(['produit' => $produit]);
   }
+
 
 
      // Met à jour un produit spécifique

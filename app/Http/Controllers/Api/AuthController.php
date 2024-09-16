@@ -6,32 +6,25 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
     public function getUserInfo()
     {
-        try {
-            // Authentifie l'utilisateur à partir du token JWT
-            $user = JWTAuth::parseToken()->authenticate();
-
-            // Prépare les données de réponse avec l'URL de la photo
-            $response = [
-                'name' => $user->name,
-                'photo' => url('storage/app/' . $user->photo), // Assurez-vous que le chemin est correct
-                // Ajoutez d'autres informations si nécessaire
-            ];
-
-            // Retourne les informations utilisateur en format JSON
-            return response()->json($response);
-        } catch (\Exception $e) {
-            // En cas d'erreur, retourne un message d'erreur en format JSON
+        $user = Auth::user();
+        if ($user) {
             return response()->json([
-                'message' => 'Erreur lors de la récupération de l\'utilisateur',
-                'error' => $e->getMessage(),
-            ], 500);
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                // Ajoute d'autres champs si nécessaire
+            ]);
+        } else {
+            return response()->json(['error' => 'User not authenticated'], 401);
         }
     }
 
@@ -47,6 +40,7 @@ class AuthController extends Controller
         "adresse" => "required",
         "photo" => "required|image|mimes:jpeg,png,jpg,gif|max:2048", // Ajout de la validation pour l'image
         "telephone" => "required",
+        'statut' => 'sometimes|in:bloquer,debloquer',
     ]);
 
     try {
@@ -108,6 +102,7 @@ public function update(Request $request, $id)
         "adresse" => "required",
         "photo" => "nullable|image|mimes:jpeg,png,jpg,gif|max:2048", // L'image est optionnelle
         "telephone" => "required",
+        'statut' => 'sometimes|in:bloquer,debloquer',
     ]);
 
     try {
@@ -214,7 +209,7 @@ public function bloquerUtilisateur($id)
             'statut' => true,
             'message' => 'L\'utilisateur a été bloqué avec succès.'
         ], 200);
-        
+
     } catch (\Exception $e) {
         return response()->json([
             'statut' => false,
@@ -277,5 +272,64 @@ public function bloquerUtilisateur($id)
             'statut' => true,
             "token" =>  $newToken
         ]);
+    }
+
+
+    public function getUsers()
+    {
+
+        // Retrieve all users
+        $users = User::all();
+
+        return response()->json([
+            'statut' => 200,
+            'data' => $users
+        ]);
+    }
+
+
+
+    public function updateStatus(Request $request, $id)
+    {
+        // Validation des données
+        $request->validate([
+            'statut' => 'required|string|in:debloquer,bloquer', // Validation pour le statut
+        ]);
+
+        // Recherche de la catégorie
+        $user = User::find($id);
+
+        // Vérification si la catégorie existe
+        if (!$user) {
+            return response()->json(['message' => 'produit non trouvée'], 404);
+        }
+
+        // Mise à jour du statut
+        $user->update([
+            'statut' => $request->statut,
+        ]);
+
+        return response()->json([
+            'message' => 'Statut de l\'utilisateur mis à jour avec succès!',
+            'produit' => $user
+        ], 200);
+    }
+
+    public function destroy($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'user non trouvé'], 404);
+        }
+
+        // Supprimer l'image associée si elle existe
+        if ($user->image && Storage::exists('public/images/' . $user->image)) {
+            Storage::delete('public/images/' . $user->image);
+        }
+
+        $user->delete();
+
+        return response()->json(['message' => 'user supprimé avec succès'], 200);
     }
 }

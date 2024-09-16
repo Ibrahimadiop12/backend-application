@@ -43,4 +43,10 @@ class Declaration extends Model
 
         return $declaration;
     }
+
+     // Relation avec les lignes de commande
+     public function lignesCommandes()
+     {
+         return $this->hasMany(LigneCommande::class);
+     }
 }

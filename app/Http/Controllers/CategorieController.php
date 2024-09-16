@@ -6,6 +6,8 @@ use App\Models\Categorie;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+
 
 class CategorieController extends Controller
 {
@@ -69,12 +71,17 @@ class CategorieController extends Controller
     // Met à jour une catégorie spécifique
     public function update(Request $request, $id)
     {
-        // Validation des données
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'nomCategorie' => 'required|string|max:255',
-            'statut' => 'sometimes|in:publie,archive', // Validation pour le statut
+            'statut' => 'sometimes|in:publier,archiver', // Validation pour le statut
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validation de l'image
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         // Recherche de la catégorie
         $categorie = Categorie::find($id);
@@ -100,9 +107,9 @@ class CategorieController extends Controller
 
         // Mise à jour de la catégorie
         $categorie->update([
-            'nomCategorie' => $request->nomCategorie,
-            'statut' => $request->input('statut', $categorie->statut), // Mise à jour du statut ou conservation de l'ancien
-            'image' => $imagePath ? basename($imagePath) : $categorie->image, // Mise à jour de l'image ou conservation de l'ancienne
+            'nomCategorie' => $request->input('nomCategorie'),
+            'statut' => $request->input('statut', $categorie->statut),
+            'image' => $imagePath ? basename($imagePath) : $categorie->image,
         ]);
 
         return response()->json([
@@ -110,6 +117,7 @@ class CategorieController extends Controller
             'categorie' => $categorie
         ], 200);
     }
+
 
 
     // Supprime une catégorie spécifique
@@ -128,38 +136,29 @@ class CategorieController extends Controller
 
         return response()->json(['message' => 'Catégorie supprimée avec succès'], 200);
     }
-    public function archiver($id)
-    {
-        $categorie = Categorie::find($id);
+    public function updateStatus(Request $request, $id)
+{
+    // Validation des données
+    $request->validate([
+        'statut' => 'required|string|in:publie,archive', // Validation pour le statut
+    ]);
 
-        if (!$categorie) {
-            return response()->json(['message' => 'Categorie non trouvé'], 404);
-        }
+    // Recherche de la catégorie
+    $categorie = Categorie::find($id);
 
-        $categorie->statut = 'archive';
-        $categorie->save();
-
-        return response()->json([
-            'message' => 'Categorie archivé avec succès!',
-            'produit' => $categorie
-        ], 200);
+    // Vérification si la catégorie existe
+    if (!$categorie) {
+        return response()->json(['message' => 'Catégorie non trouvée'], 404);
     }
 
-     // Publie un produit spécifique
-     public function publier($id)
-     {
-         $categorie = Categorie::find($id);
- 
-         if (!$categorie) {
-             return response()->json(['message' => 'Categorie non trouvé'], 404);
-         }
- 
-         $categorie->statut = 'publie';
-         $categorie->save();
- 
-         return response()->json([
-             'message' => 'Categorie publié avec succès!',
-             'produit' => $categorie
-         ], 200);
-     }
+    // Mise à jour du statut
+    $categorie->update([
+        'statatut' => $request->statut,
+    ]);
+
+    return response()->json([
+        'message' => 'Statut de la catégorie mis à jour avec succès!',
+        'categorie' => $categorie
+    ], 200);
+}
 }

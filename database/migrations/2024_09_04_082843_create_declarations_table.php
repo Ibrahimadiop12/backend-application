@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('quantite');
             $table->decimal('prix', 8, 2)->after('stock');
             $table->date('date_peremption');
-            $table->enum('statut', ['publier', 'en attente','annuler'])->default('en attente');
+            $table->enum('statut', ['publier','archiver'])->default('publier');
             $table->foreignId('produit_id')->constrained();
             $table->foreignId('vendeur_id')->constrained('users');
             $table->timestamps();

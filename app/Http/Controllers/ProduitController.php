@@ -63,6 +63,14 @@ class ProduitController extends Controller
     ], 201);
 }
 
+  ///Récupération d'un produit
+
+  public function show($id)
+  {
+      $produit = Produit::with('categorie')->find($id);
+      return response()->json(['produit' => $produit]);
+  }
+
 
 
      // Met à jour un produit spécifique
@@ -178,6 +186,34 @@ class ProduitController extends Controller
 
          return response()->json([
              'message' => 'Produit publié avec succès!',
+             'produit' => $produit
+         ], 200);
+     }
+
+
+
+     public function updateStatus(Request $request, $id)
+     {
+         // Validation des données
+         $request->validate([
+             'statut' => 'required|string|in:publier,archiver', // Validation pour le statut
+         ]);
+
+         // Recherche de la catégorie
+         $produit = Produit::find($id);
+
+         // Vérification si la catégorie existe
+         if (!$produit) {
+             return response()->json(['message' => 'produit non trouvée'], 404);
+         }
+
+         // Mise à jour du statut
+         $produit->update([
+             'statut' => $request->statut,
+         ]);
+
+         return response()->json([
+             'message' => 'Statut de la produit mis à jour avec succès!',
              'produit' => $produit
          ], 200);
      }

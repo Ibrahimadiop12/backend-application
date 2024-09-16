@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Expedition;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,6 +14,11 @@ return new class extends Migration
     {
         Schema::create('commandes', function (Blueprint $table) {
             $table->id();
+            $table->string('numero_commande')->unique();
+            $table->decimal('montant_total', 10, 2);
+            $table->timestamp('dateCommande')->useCurrent();
+            $table->enum('status', ['en cours', 'validée', 'expédiée', 'payée', 'annulée'])->default('en cours');
+            $table->foreignId('client_id')->constrained('users');
             $table->timestamps();
         });
     }

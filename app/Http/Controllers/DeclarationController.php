@@ -86,7 +86,7 @@ class DeclarationController extends Controller
    public function showByVendeur($vendeur_id)
    {
        $declarations = Declaration::where('vendeur_id', $vendeur_id)
-           ->with('produit')
+           ->with('produit.categorie')
            ->get();
 
        return response()->json([

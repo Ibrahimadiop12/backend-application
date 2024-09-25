@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\ReglementController;
+use App\Http\Controllers\ExpeditionController;
 use App\Http\Controllers\DeclarationController;
 use App\Http\Controllers\LigneCommandeController;
 use App\Http\Controllers\Api\ResetPasswordController;
@@ -90,9 +91,18 @@ Route::middleware('auth:api')
 
             // Route pour récupérer la liste des produits
             Route::get('/produitsid/{id}', [ProduitController::class, 'show']); // Affiche un produit spécifique
+            ///Route pour récupérer ses commandes
+            Route::get('/commandes-par-vendeur', [CommandeController::class, 'getCommandesParVendeur']);
+            ///Expédition
+            Route::post('/expeditions', [ExpeditionController::class, 'store']);
 
-
-
+            ///Tableau de bord 
+            Route::get('/total-commandes-validees', [CommandeController::class, 'getTotalCommandesValidees']);
+            Route::get('/total-annonces-par-vendeur', [CommandeController::class, 'getTotalAnnoncesParVendeur']);
+            Route::get('/total-annonces-par-categorie', [CommandeController::class, 'getTotalAnnoncesParCategorie']);
+            Route::get('/total-lignes-commandes-par-categorie', [CommandeController::class, 'getTotalLignesCommandesParCategorie']);
+            Route::get('/total-commandes-journalieres', [CommandeController::class, 'getTotalCommandesJournalieres']);
+            Route::get('/montant-total-commandes', [CommandeController::class, 'getMontantTotalCommandes']);
         });
 
         Route::middleware('role:client')->group(function () {
@@ -109,7 +119,7 @@ Route::middleware('auth:api')
             ///Méthode qui permet de supprimer
             Route::delete('/lignes-commandes/supprimer', [CommandeController::class, 'supprimerLigneCommande']);
             ///Api pour vider le panier
-
+            Route::get('/commande/en-cours', [CommandeController::class, 'getCommandeEnCours']);
             ///methode qui compte le nombre de ligne de commande
             Route::get('/lignes-par-utilisateur', [LigneCommandeController::class, 'compterLignesParUtilisateur']);
              Route::post('/store-payment', [ReglementController::class, 'storePayment']);

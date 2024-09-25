@@ -17,6 +17,7 @@ return new class extends Migration
             $table->date('date_livraison')->nullable();
             $table->enum('statut', ['en_cours', 'expédié', 'livré', 'annulé'])->default('en_cours');
             $table->decimal('frais_livraison', 10, 2);
+            $table->foreignId('commande_id')->nullable()->constrained('commandes')->onDelete('cascade')->after('id'); // Ajoute un ID utilisateur
             $table->timestamps();
         });
     }

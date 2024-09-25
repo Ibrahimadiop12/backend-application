@@ -76,4 +76,6 @@ class ReglementController extends Controller
             ], 500);
         }
     }
+   
+
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Produit;
 use App\Models\Commande;
 use App\Models\Declaration;
 use Illuminate\Support\Str;
@@ -212,6 +214,93 @@ public function show($id)
 
     return response()->json($commande);
 }
+  // Dans CommandeController.php
+public function getCommandeEnCours(Request $request) {
+    // Logique pour récupérer la commande en cours
+    $commande = Commande::where('client_id', $request->user()->id)->where('status', 'en cours')->first();
+    return response()->json($commande);
+}
+public function getCommandesParVendeur()
+{
+    // Récupérer l'utilisateur connecté (le vendeur)
+    $user = Auth::user();
 
+    // Vérifier si l'utilisateur est authentifié
+    if (!$user) {
+        return response()->json(['message' => 'Utilisateur non authentifié.'], 401);
+    }
+
+    // Vérifier si l'utilisateur est un vendeur
+    if ($user->role !== 'vendeur') {
+        return response()->json(['message' => 'Accès non autorisé.'], 403);
+    }
+
+    // Récupérer les commandes validées liées au vendeur connecté
+    $commandes = Commande::whereHas('ligneCommandes.declaration', function ($query) use ($user) {
+        $query->where('vendeur_id', $user->id); // Utilisez l'ID du vendeur connecté
+    })->where('status', 'validée')->with(['ligneCommandes.declaration', 'client'])->get();
+
+    return response()->json($commandes, 200);
+}
+
+public function getTotalCommandesValidees()
+    {
+        $vendeurId = Auth::id();
+        return response()->json([
+            'total_commandes_validees' => Commande::whereHas('ligneCommandes.declaration', function ($query) use ($vendeurId) {
+                $query->where('vendeur_id', $vendeurId);
+            })->where('status', 'validée')->count()
+        ]);
+    }
+
+    public function getTotalAnnoncesParVendeur()
+    {
+        $vendeurId = Auth::id();
+        return response()->json([
+            'total_annonces' => Declaration::where('vendeur_id', $vendeurId)->count()
+        ]);
+    }
+
+    public function getTotalAnnoncesParCategorie()
+    {
+        $vendeurId = Auth::id();
+        return response()->json(Produit::select('categorie_id', DB::raw('count(*) as total'))
+            ->whereHas('annonces', function ($query) use ($vendeurId) {
+                $query->where('vendeur_id', $vendeurId);
+            })
+            ->groupBy('categorie_id')
+            ->with('categorie') // Charge les catégories
+            ->get());
+    }
+
+    public function getTotalLignesCommandesParCategorie()
+    {
+        $vendeurId = Auth::id();
+        return response()->json(LigneCommande::select('categorie_id', DB::raw('count(*) as total'))
+            ->whereHas('produit.declaration', function ($query) use ($vendeurId) {
+                $query->where('vendeur_id', $vendeurId);
+            })
+            ->groupBy('categorie_id')
+            ->with('produit.categorie') // Charge les catégories
+            ->get());
+    }
+
+    public function getTotalCommandesJournalieres()
+    {
+        return response()->json([
+            'total_commandes_journalieres' => Commande::whereDate('dateCommande', now()->format('Y-m-d'))->count()
+        ]);
+    }
+
+    public function getMontantTotalCommandes()
+    {
+        $vendeurId = Auth::id();
+        return response()->json([
+            'montant_total_commandes' => Commande::whereHas('ligneCommandes.declaration', function ($query) use ($vendeurId) {
+                $query->where('vendeur_id', $vendeurId);
+            })->where('status', 'validée')->sum('montant_total')
+        ]);
+    }
+ 
 
 }

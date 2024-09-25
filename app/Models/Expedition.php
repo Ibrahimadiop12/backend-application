@@ -14,4 +14,5 @@ class Expedition extends Model
     {
         return $this->hasOne(Commande::class); // Une expédition est liée à une commande
     }
+
 }

@@ -16,7 +16,7 @@ class Commande extends Model
         'status',
         'client_id',
         'expedition_id',
-        'reglement_id'
+
     ];
 
     protected static function boot()
@@ -34,10 +34,7 @@ class Commande extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function expedition()
-    {
-        return $this->belongsTo(Expedition::class);
-    }
+
 
     public function reglement()
     {

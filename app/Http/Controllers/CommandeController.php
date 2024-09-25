@@ -83,7 +83,7 @@ class CommandeController extends Controller
     return response()->json(['message' => 'Ligne de commande ajoutée avec succès.'], 200);
 }
 
-///Cette fonction permet d'incrémenter la quantité 
+///Cette fonction permet d'incrémenter la quantité
 public function incrementerQuantite(Request $request)
 {
     // Vérifier si l'utilisateur est authentifié
@@ -190,5 +190,28 @@ public function supprimerLigneCommande(Request $request)
 
     return response()->json(['message' => 'Ligne de commande supprimée avec succès.'], 200);
 }
+
+// CommandeController.php
+public function viderPanier($userId)
+{
+    // Supprimer les lignes de commande associées à l'utilisateur
+    LigneCommande::where('user_id', $userId)->delete();
+
+    // Retourner une réponse
+    return response()->json(['message' => 'Le panier a été vidé avec succès.'], 200);
+}
+
+public function show($id)
+{
+    // Récupérer la commande avec ses lignes de commande
+    $commande = Commande::with('ligneCommandes')->find($id);
+
+    if (!$commande) {
+        return response()->json(['message' => 'Commande non trouvée'], 404);
+    }
+
+    return response()->json($commande);
+}
+
 
 }

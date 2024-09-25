@@ -50,18 +50,18 @@ public function getLignesCommandes()
  {
      // Récupère l'utilisateur actuellement connecté
      $utilisateurId = auth()->user()->id;
- 
+
      // Compte les lignes de commande pour l'utilisateur connecté
      $nombreLignes = DB::table('ligne_commandes')
          ->join('commandes', 'ligne_commandes.commande_id', '=', 'commandes.id')
          ->where('commandes.client_id', $utilisateurId) // Filtrer par utilisateur connecté
          ->count(); // Compte le nombre de lignes de commande
- 
+
      // Retourner le nombre de lignes sous forme de réponse JSON
      return response()->json(['nombre_lignes' => $nombreLignes]);
  }
-    
-    ///Méthode pour enregistrer une ligne de commande 
+
+    ///Méthode pour enregistrer une ligne de commande
     public function store(Request $request)
 {
      // Récupérer l'utilisateur connecté
@@ -70,36 +70,37 @@ public function getLignesCommandes()
      if (!$user) {
          return response()->json(['message' => 'Utilisateur non authentifié.'], 401);
      }
- 
+
      // Valider la requête
      $request->validate([
          'declaration_id' => 'required|exists:declarations,id',
      ]);
- 
+
      $declarationId = $request->input('declaration_id');
- 
+
      // Récupérer les lignes de commande de la session pour l'utilisateur connecté
      $ligneCommandes = session()->get('ligne_commandes_' . $user->id, []);
- 
+
      if (isset($ligneCommandes[$declarationId])) {
          // Si une ligne de commande existe déjà, incrémenter la quantité
          $ligneCommandes[$declarationId]['quantite'] += 1;
      } else {
          // Sinon, créer une nouvelle ligne de commande
          $declaration = Declaration::find($declarationId);
- 
+
          $ligneCommandes[$declarationId] = [
              'declaration_id' => $declarationId,
              'prixUnitaire' => $declaration->prix,
              'quantite' => 1,
          ];
      }
- 
+
      // Stocker les lignes de commande dans la session pour l'utilisateur connecté
      session()->put('ligne_commandes_' . $user->id, $ligneCommandes);
- 
+
      return response()->json(['message' => 'Ligne de commande ajoutée avec succès.'], 200);
 }
+
 
 
 }

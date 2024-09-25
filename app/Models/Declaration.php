@@ -49,4 +49,5 @@ class Declaration extends Model
      {
          return $this->hasMany(LigneCommande::class);
      }
+
 }

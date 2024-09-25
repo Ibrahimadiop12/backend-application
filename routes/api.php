@@ -2,10 +2,12 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\CategorieController;
+use App\Http\Controllers\ReglementController;
 use App\Http\Controllers\DeclarationController;
 use App\Http\Controllers\LigneCommandeController;
 use App\Http\Controllers\Api\ResetPasswordController;
@@ -61,7 +63,7 @@ Route::middleware('auth:api')
             Route::get('/categories/{id}', [CategorieController::class, 'show']); // Affiche une catégorie spécifique
             Route::put('/categories/{id}', [CategorieController::class, 'update']); // Met à jour une catégorie spécifique
             Route::delete('/categories/{id}', [CategorieController::class, 'destroy']); // Supprime une catégorie spécifique
-            //route pour produits 
+            //route pour produits
             Route::get('/produits', [ProduitController::class, 'index']); // Liste tous les produits
             Route::post('/produits', [ProduitController::class, 'store']); // Crée un nouveau produit
             Route::put('/produits/{id}', [ProduitController::class, 'update']); // Met à jour un produit spécifique
@@ -100,17 +102,30 @@ Route::middleware('auth:api')
             ///Commande
             Route::post('commandes', [CommandeController::class, 'store']);
             Route::get('commandes', [CommandeController::class, 'index']);
-            ///Methode incrément et décrément de la quantité 
+            Route::get('/commandes/{id}', [CommandeController::class, 'show']);
+            ///Methode incrément et décrément de la quantité
             Route::post('/lignes-commandes/incrementer', [CommandeController::class, 'incrementerQuantite']);
             Route::post('/lignes-commandes/decrementer', [CommandeController::class, 'decrementerQuantite']);
             ///Méthode qui permet de supprimer
             Route::delete('/lignes-commandes/supprimer', [CommandeController::class, 'supprimerLigneCommande']);
+            ///Api pour vider le panier
 
-
-            ///methode qui compte le nombre de ligne de commande 
+            ///methode qui compte le nombre de ligne de commande
             Route::get('/lignes-par-utilisateur', [LigneCommandeController::class, 'compterLignesParUtilisateur']);
+             Route::post('/store-payment', [ReglementController::class, 'storePayment']);
+            // web.php ou api.php
+
+
 
         });
     });
     Route::get('/declarations', [DeclarationController::class, 'index']);
+    Route::post('/create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
+    Route::post('/create-checkout-session', [PaymentController::class, 'createCheckoutSession']);
+    Route::post('/payment-cash', [PaymentController::class, 'paymentByCash']);
+    Route::get('/payment/success', [PaymentController::class, 'paymentSuccess'])->name('payment.success');
+    Route::get('/payment/cancel', [PaymentController::class, 'paymentCancel'])->name('payment.cancel');
+    // routes/api.php
+
+
     Route::middleware('auth:api')->get('/user', [AuthController::class, 'getUserInfo']);

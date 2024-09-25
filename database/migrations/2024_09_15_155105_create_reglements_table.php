@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('reglements', function (Blueprint $table) {
             $table->id();
-            $table->enum('methode_paiement', ['carte_bancaire', 'mobile_money', 'paypal', 'virement_bancaire']);
+            $table->enum('methode_paiement', ['carte', 'espece'])->after('id');
             $table->enum('type_paiement', ['plein', 'partiel']);
             $table->decimal('montant', 10, 2);
             $table->date('date_paiement');
             $table->enum('statut', ['en_attente', 'validé', 'échoué'])->default('en_attente');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade')->after('id'); // Ajoute un ID utilisateur
+            $table->foreignId('commande_id')->nullable()->constrained('commandes')->onDelete('cascade')->after('id'); // Ajoute un ID utilisateur
+
             $table->timestamps();
         });
     }
